@@ -1,0 +1,9 @@
+services:
+  postgres:
+    image: 'postgres:latest'
+    environment:
+      - 'POSTGRES_DB=customer-db'
+      - 'POSTGRES_PASSWORD=abid'
+      - 'POSTGRES_USER=abid'
+    ports:
+      - '5432:5432'
