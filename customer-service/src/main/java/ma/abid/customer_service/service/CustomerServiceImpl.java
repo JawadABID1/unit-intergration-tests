@@ -18,8 +18,8 @@ import java.util.Optional;
 @Service
 @Transactional
 public class CustomerServiceImpl implements CustomerService{
-    private CustomerRepository customerRepository;
-    private CustomerMapper customerMapper;
+    private final CustomerRepository customerRepository;
+    private final CustomerMapper customerMapper;
 
     public CustomerServiceImpl(CustomerRepository customerRepository, CustomerMapper customerMapper) {
         this.customerRepository = customerRepository;
@@ -36,31 +36,27 @@ public class CustomerServiceImpl implements CustomerService{
         }
         Customer customerToSave = customerMapper.fromCustomerDTO(customerDTO);
         Customer savedCustomer = customerRepository.save(customerToSave);
-        CustomerDTO result = customerMapper.fromCustomer(savedCustomer);
-        return result;
+        return customerMapper.fromCustomer(savedCustomer);
 
     }
 
     @Override
     public List<CustomerDTO> getAllCustomers() {
         List<Customer> allCustomers = customerRepository.findAll();
-        List<CustomerDTO> allCustomerDTO = customerMapper.customerDTOList(allCustomers);
-        return allCustomerDTO;
+        return customerMapper.customerDTOList(allCustomers);
     }
 
     @Override
     public CustomerDTO getCustomerById(Long id) throws CustomerNotFoundException {
         Optional<Customer> searchedCustomer = customerRepository.findById(id);
         if(searchedCustomer.isEmpty()) throw new  CustomerNotFoundException("This Customer not found");
-        CustomerDTO findCustomer = customerMapper.fromCustomer(searchedCustomer.get());
-        return findCustomer;
+        return customerMapper.fromCustomer(searchedCustomer.get());
     }
 
     @Override
     public List<CustomerDTO> searchCustomers(String keyword) {
         List<Customer> searchedCustomers = customerRepository.findByFirstNameContainsIgnoreCase(keyword);
-        List<CustomerDTO> searchedCustomersDTO = customerMapper.customerDTOList(searchedCustomers);
-        return searchedCustomersDTO;
+        return customerMapper.customerDTOList(searchedCustomers);
     }
 
     @Override
@@ -70,8 +66,7 @@ public class CustomerServiceImpl implements CustomerService{
         customerDTO.setId(id);
         Customer customerToSave = customerMapper.fromCustomerDTO(customerDTO);
         Customer savedCustomer = customerRepository.save(customerToSave);
-        CustomerDTO result = customerMapper.fromCustomer(savedCustomer);
-        return result;
+        return customerMapper.fromCustomer(savedCustomer);
     }
 
     @Override

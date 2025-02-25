@@ -57,7 +57,8 @@ class CustomerServiceImplTest {
         Mockito.when(customerRepository.findByEmail(customerDTO.getEmail())).thenReturn(Optional.of(customer));
 
 //        Assert
-        AssertionsForClassTypes.assertThatThrownBy(()->underTest.saveNewCustomer(customerDTO)).isInstanceOf(EmailAlreadyExistException.class);
+        AssertionsForClassTypes.assertThatThrownBy(()->underTest.saveNewCustomer(customerDTO)).isInstanceOf(EmailAlreadyExistException.class)
+                .hasMessage("Email already exists: "+customerDTO.getEmail());
     }
 
     @Test
@@ -161,7 +162,8 @@ class CustomerServiceImplTest {
         Mockito.when(customerRepository.findById(id)).thenReturn(Optional.empty());
 
 //        Assertion
-        AssertionsForClassTypes.assertThatThrownBy(()->underTest.upDateCustomer(id, customerDTO)).isInstanceOf(CustomerNotFoundException.class);
+        AssertionsForClassTypes.assertThatThrownBy(()->underTest.upDateCustomer(id, customerDTO)).isInstanceOf(CustomerNotFoundException.class)
+                .hasMessage("This Customer not found");
     }
 
     @Test
@@ -182,7 +184,8 @@ class CustomerServiceImplTest {
         Long id = 9L;
         Mockito.when(customerRepository.findById(id)).thenReturn(Optional.empty());
 
-        AssertionsForClassTypes.assertThatThrownBy(()->underTest.deleteCustomer(id)).isInstanceOf(CustomerNotFoundException.class);
+        AssertionsForClassTypes.assertThatThrownBy(()->underTest.deleteCustomer(id)).isInstanceOf(CustomerNotFoundException.class)
+                .hasMessage("This Customer not found");
     }
 
 }

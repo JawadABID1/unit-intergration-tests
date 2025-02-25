@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.*;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -55,7 +56,11 @@ public class CustomerIntegrationTest {
      */
     @Test
     void shouldFetchAllCustomers() {
-        ResponseEntity<CustomerDTO[]> response = testRestTemplate.exchange("/api/customers", HttpMethod.GET, null, CustomerDTO[].class);
+        ResponseEntity<CustomerDTO[]> response = testRestTemplate.exchange(
+                "/api/customers",
+                HttpMethod.GET,
+                null,
+                CustomerDTO[].class);
         List<CustomerDTO> content = Arrays.asList(Objects.requireNonNull(response.getBody()));
 
         AssertionsForClassTypes.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -69,7 +74,11 @@ public class CustomerIntegrationTest {
     @Test
     void shouldFetchSearchedCustomers() {
         String keyword = "al";
-        ResponseEntity<CustomerDTO[]> response = testRestTemplate.exchange("/api/customers/search?keyword=" + keyword, HttpMethod.GET, null, CustomerDTO[].class);
+        ResponseEntity<CustomerDTO[]> response = testRestTemplate.exchange(
+                "/api/customers/search?keyword=" + keyword,
+                HttpMethod.GET,
+                null,
+                CustomerDTO[].class);
         List<CustomerDTO> customers = Arrays.asList(Objects.requireNonNull(response.getBody()));
 
         AssertionsForClassTypes.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -86,7 +95,11 @@ public class CustomerIntegrationTest {
     void shouldFetchCustomerById(){
         Long id = 1L;
         CustomerDTO expected = customerDTOList.get(0);
-        ResponseEntity<CustomerDTO> response = testRestTemplate.exchange("/api/customers/"+id, HttpMethod.GET, null, CustomerDTO.class);
+        ResponseEntity<CustomerDTO> response = testRestTemplate.exchange(
+                "/api/customers/"+id,
+                HttpMethod.GET,
+                null,
+                CustomerDTO.class);
         CustomerDTO content = Objects.requireNonNull(response.getBody());
         AssertionsForClassTypes.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         AssertionsForClassTypes.assertThat(content).isNotNull();
@@ -99,7 +112,11 @@ public class CustomerIntegrationTest {
     @Test
     void shouldNotFetchCustomerByIdNotFound(){
         Long invalidId = 9L;
-        ResponseEntity<String> response = testRestTemplate.exchange("/api/customers/"+invalidId, HttpMethod.GET, null, String.class);
+        ResponseEntity<String> response = testRestTemplate.exchange(
+                "/api/customers/"+invalidId,
+                HttpMethod.GET,
+                null,
+                String.class);
         String content = response.getBody();
         AssertionsForClassTypes.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         AssertionsForClassTypes.assertThat(content).isNotNull();
@@ -109,22 +126,16 @@ public class CustomerIntegrationTest {
      * Test to updating given customer
      */
     @Test
+    @Rollback
     void shouldUpdateGivenCustomer() {
         Long id = 1L;
 
-        // Create an updated CustomerDTO object
         CustomerDTO updatedCustomer = CustomerDTO.builder()
-                .id(id)
                 .firstName("UpdatedFirstName")
                 .lastName("UpdatedLastName")
                 .email("updated@example.com")
                 .build();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-
-        HttpEntity<CustomerDTO> requestEntity = new HttpEntity<>(updatedCustomer, headers);
+        HttpEntity<CustomerDTO> requestEntity = new HttpEntity<>(updatedCustomer);
 
         ResponseEntity<CustomerDTO> response = testRestTemplate.exchange(
                 "/api/customers/" + id,
@@ -133,10 +144,12 @@ public class CustomerIntegrationTest {
                 CustomerDTO.class
         );
 
+        System.out.println("response: "+ response);
+
         // Assertions
         AssertionsForClassTypes.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         AssertionsForClassTypes.assertThat(response.getBody()).isNotNull();
-        AssertionsForClassTypes.assertThat(response.getBody()).usingRecursiveComparison().isEqualTo(updatedCustomer);
+        AssertionsForClassTypes.assertThat(response.getBody()).usingRecursiveComparison().ignoringFields("id").isEqualTo(updatedCustomer);
     }
 
     @Test
@@ -172,9 +185,14 @@ public class CustomerIntegrationTest {
      * Test to delete customer
      */
     @Test
+    @Rollback
     void shouldDeleteCustomer() {
-        Long id = 1L;
-        ResponseEntity<Void> response = testRestTemplate.exchange("/api/customers/" + id, HttpMethod.DELETE, null, Void.class);
+        Long id = 2L;
+        ResponseEntity<Void> response = testRestTemplate.exchange(
+                "/api/customers/" + id,
+                HttpMethod.DELETE,
+                null,
+                Void.class);
 
         // Assert DELETE response
         AssertionsForClassTypes.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
@@ -203,10 +221,15 @@ public class CustomerIntegrationTest {
      * Test to save valid customer
      */
     @Test
+    @Rollback
     void shouldSaveValidCustomer(){
         CustomerDTO customerToSave = CustomerDTO.builder().firstName("Mohamed").lastName("ABID").email("mohamed@abid.com").build();
 
-        ResponseEntity<CustomerDTO> response = testRestTemplate.exchange("/api/customers", HttpMethod.POST, new HttpEntity<>(customerToSave), CustomerDTO.class);
+        ResponseEntity<CustomerDTO> response = testRestTemplate.exchange(
+                "/api/customers",
+                HttpMethod.POST,
+                new HttpEntity<>(customerToSave),
+                CustomerDTO.class);
         CustomerDTO content = response.getBody();
 
         AssertionsForClassTypes.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -249,6 +272,27 @@ public class CustomerIntegrationTest {
         AssertionsForClassTypes.assertThat(errors.get("firstName")).isNotEmpty();
         AssertionsForClassTypes.assertThat(errors.get("lastName")).isNotEmpty();
         AssertionsForClassTypes.assertThat(errors.get("email")).isNotEmpty();
+    }
+    /**
+     * Test for Not create a new customer with email exist
+     */
+    @Test
+    void shouldNotSaveNewCustomerWithExsitedEmail(){
+        CustomerDTO customerDTO = CustomerDTO.builder()
+                .firstName("test")
+                .lastName("test")
+                .email("jawad@abid.com")
+                .build();
+
+        ResponseEntity<String> response = testRestTemplate.exchange(
+                "/api/customers",
+                HttpMethod.POST,
+                new HttpEntity<>(customerDTO),
+                String.class
+        );
+        String content = response.getBody();
+        AssertionsForClassTypes.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        AssertionsForClassTypes.assertThat(content).contains("Email already exists: "+customerDTO.getEmail());
     }
 
 

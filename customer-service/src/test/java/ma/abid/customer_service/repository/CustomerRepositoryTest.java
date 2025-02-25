@@ -11,8 +11,6 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @DataJpaTest
 @ActiveProfiles("test")
 class CustomerRepositoryTest {
@@ -44,10 +42,10 @@ class CustomerRepositoryTest {
         String givenEmail = "jawad@abid.com";
 
 //        Act
-        Optional<Customer> reuslt = customerRepository.findByEmail(givenEmail);
+        Optional<Customer> result = customerRepository.findByEmail(givenEmail);
 
 //        Assert
-        AssertionsForClassTypes.assertThat(reuslt).isPresent();
+        AssertionsForClassTypes.assertThat(result).isPresent();
     }
 
     @Test

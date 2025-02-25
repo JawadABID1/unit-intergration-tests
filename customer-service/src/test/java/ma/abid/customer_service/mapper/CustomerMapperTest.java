@@ -65,7 +65,7 @@ class CustomerMapperTest {
     public void shouldNotMapNullCustomerToCustomerDTO(){
 //        Arrange
         Customer nullCustomer = null;
-        CustomerDTO expected = CustomerDTO.builder().id(1L).firstName("Jawad").lastName("ABID").email("jawad@abid.cpm").id(1L).firstName("Jawad").lastName("ABID").email("jawad@abid.cpm").build();
+//        CustomerDTO expected = CustomerDTO.builder().id(1L).firstName("Jawad").lastName("ABID").email("jawad@abid.cpm").id(1L).firstName("Jawad").lastName("ABID").email("jawad@abid.cpm").build();
 
 //        Act
 //        CustomerDTO result = underTest.fromCustomer(nullCustomer);
@@ -74,6 +74,12 @@ class CustomerMapperTest {
 
         AssertionsForClassTypes.assertThatThrownBy(()->underTest.fromCustomer(nullCustomer)).isInstanceOf(IllegalArgumentException.class);
 
+    }
+
+    @Test
+    void shouldNotMapNullCustomerDTOToCustomer(){
+        CustomerDTO customerDTO = null;
+        AssertionsForClassTypes.assertThatThrownBy(()->underTest.fromCustomerDTO(customerDTO)).isInstanceOf(IllegalArgumentException.class);
     }
 
 }
